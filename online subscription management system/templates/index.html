@@ -1,0 +1,123 @@
+<!--
+    Home Page - Online Subscription Management System
+    Displays the hero section, features, and call to action.
+-->
+{% extends 'base.html' %}
+
+{% block title %}Home{% endblock %}
+
+{% block content %}
+
+<!-- ===== Hero Section ===== -->
+<section class="hero-section text-center">
+    <div class="container">
+        <h1>Manage Your Subscriptions <br>with Ease</h1>
+        <p class="mb-4">A simple, affordable, and reliable subscription management platform.<br>
+        Choose the perfect plan and manage everything from one dashboard.</p>
+        <a href="{{ url_for('plans') }}" class="btn btn-light btn-lg me-2 px-4">
+            <i class="bi bi-card-list me-2"></i>View Plans
+        </a>
+        {% if not session.get('user_id') %}
+        <a href="{{ url_for('register') }}" class="btn btn-outline-light btn-lg px-4">
+            <i class="bi bi-person-plus me-2"></i>Get Started
+        </a>
+        {% endif %}
+    </div>
+</section>
+
+<!-- ===== Features Section ===== -->
+<section class="py-5">
+    <div class="container">
+        <div class="text-center mb-5">
+            <h2 class="section-title">Why Choose SubManager?</h2>
+            <p class="section-subtitle">Everything you need to manage your subscriptions in one place</p>
+        </div>
+
+        <div class="row g-4">
+            <!-- Feature 1 -->
+            <div class="col-md-4">
+                <div class="feature-card">
+                    <div class="feature-icon" style="background: linear-gradient(135deg, #6c5ce7, #a29bfe);">
+                        <i class="bi bi-shield-check"></i>
+                    </div>
+                    <h5>Secure & Reliable</h5>
+                    <p>Your data is safely stored and protected. We ensure the highest level of security for all transactions.</p>
+                </div>
+            </div>
+
+            <!-- Feature 2 -->
+            <div class="col-md-4">
+                <div class="feature-card">
+                    <div class="feature-icon" style="background: linear-gradient(135deg, #00cec9, #55efc4);">
+                        <i class="bi bi-speedometer2"></i>
+                    </div>
+                    <h5>Easy Dashboard</h5>
+                    <p>Track and manage all your subscriptions from a single, intuitive dashboard with real-time updates.</p>
+                </div>
+            </div>
+
+            <!-- Feature 3 -->
+            <div class="col-md-4">
+                <div class="feature-card">
+                    <div class="feature-icon" style="background: linear-gradient(135deg, #fd79a8, #fab1a0);">
+                        <i class="bi bi-credit-card"></i>
+                    </div>
+                    <h5>Simple Payments</h5>
+                    <p>Quick and easy payment processing. Subscribe, renew, or cancel your plan in just a few clicks.</p>
+                </div>
+            </div>
+
+            <!-- Feature 4 -->
+            <div class="col-md-4">
+                <div class="feature-card">
+                    <div class="feature-icon" style="background: linear-gradient(135deg, #fdcb6e, #ffeaa7);">
+                        <i class="bi bi-bell"></i>
+                    </div>
+                    <h5>Plan Reminders</h5>
+                    <p>Never miss a renewal date. Get notified about your subscription status right on your dashboard.</p>
+                </div>
+            </div>
+
+            <!-- Feature 5 -->
+            <div class="col-md-4">
+                <div class="feature-card">
+                    <div class="feature-icon" style="background: linear-gradient(135deg, #e17055, #fab1a0);">
+                        <i class="bi bi-graph-up"></i>
+                    </div>
+                    <h5>Flexible Plans</h5>
+                    <p>Choose from a variety of subscription plans that suit your needs and budget. Upgrade anytime.</p>
+                </div>
+            </div>
+
+            <!-- Feature 6 -->
+            <div class="col-md-4">
+                <div class="feature-card">
+                    <div class="feature-icon" style="background: linear-gradient(135deg, #00b894, #55efc4);">
+                        <i class="bi bi-headset"></i>
+                    </div>
+                    <h5>24/7 Support</h5>
+                    <p>Our dedicated support team is always available to help you with any questions or issues.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ===== CTA Section ===== -->
+<section class="py-5" style="background: linear-gradient(135deg, #6c5ce7, #a29bfe);">
+    <div class="container text-center text-white">
+        <h2 class="fw-bold mb-3">Ready to Get Started?</h2>
+        <p class="mb-4 opacity-75">Join thousands of users who trust SubManager for their subscription needs.</p>
+        {% if not session.get('user_id') %}
+        <a href="{{ url_for('register') }}" class="btn btn-light btn-lg px-4">
+            <i class="bi bi-rocket me-2"></i>Sign Up Now
+        </a>
+        {% else %}
+        <a href="{{ url_for('plans') }}" class="btn btn-light btn-lg px-4">
+            <i class="bi bi-card-list me-2"></i>Browse Plans
+        </a>
+        {% endif %}
+    </div>
+</section>
+
+{% endblock %}
