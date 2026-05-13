@@ -1,0 +1,549 @@
+"""
+============================================
+Online Subscription Management System
+Main Flask Application (app.py)
+============================================
+This is the main backend file for the project.
+It handles all routes, database operations, and
+user authentication.
+
+Tech Stack: Python Flask + SQLite + Bootstrap 5
+============================================
+"""
+
+# ---------- Import Required Libraries ----------
+from flask import Flask, render_template, request, redirect, url_for, session, flash
+from werkzeug.security import generate_password_hash, check_password_hash
+import sqlite3
+import os
+from datetime import datetime, timedelta
+
+# ---------- App Configuration ----------
+app = Flask(__name__)
+app.secret_key = 'submanager_secret_key_2026'  # Secret key for session management
+
+
+# ============================================
+# DATABASE SETUP
+# ============================================
+
+def get_db():
+    """
+    Connect to the SQLite database.
+    Returns a database connection object.
+    """
+    db_path = os.path.join(os.path.dirname(__file__), 'database.db')
+    conn = sqlite3.connect(db_path)
+    return conn
+
+
+def init_db():
+    """
+    Initialize the database by creating all required tables.
+    This function runs when the app starts for the first time.
+    """
+    conn = get_db()
+    cursor = conn.cursor()
+
+    # Create Users table
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS users (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT NOT NULL,
+            email TEXT UNIQUE NOT NULL,
+            password TEXT NOT NULL,
+            is_admin INTEGER DEFAULT 0
+        )
+    ''')
+
+    # Create Plans table
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS plans (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            plan_name TEXT NOT NULL,
+            price REAL NOT NULL,
+            duration INTEGER NOT NULL,
+            features TEXT NOT NULL
+        )
+    ''')
+
+    # Create Subscriptions table
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS subscriptions (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            plan_id INTEGER NOT NULL,
+            start_date TEXT NOT NULL,
+            end_date TEXT NOT NULL,
+            status TEXT DEFAULT 'active',
+            FOREIGN KEY (user_id) REFERENCES users(id),
+            FOREIGN KEY (plan_id) REFERENCES plans(id)
+        )
+    ''')
+
+    # Create Payments table
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS payments (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            amount REAL NOT NULL,
+            payment_date TEXT NOT NULL,
+            payment_status TEXT DEFAULT 'success',
+            FOREIGN KEY (user_id) REFERENCES users(id)
+        )
+    ''')
+
+    # ---------- Create Default Admin Account ----------
+    # Admin email: admin@submanager.com | Password: admin123
+    admin_exists = cursor.execute(
+        'SELECT id FROM users WHERE email = ?', ('admin@submanager.com',)
+    ).fetchone()
+
+    if not admin_exists:
+        hashed_pw = generate_password_hash('admin123')
+        cursor.execute(
+            'INSERT INTO users (name, email, password, is_admin) VALUES (?, ?, ?, ?)',
+            ('Admin', 'admin@submanager.com', hashed_pw, 1)
+        )
+
+    # ---------- Create Default Plans ----------
+    plans_exist = cursor.execute('SELECT COUNT(*) FROM plans').fetchone()[0]
+
+    if plans_exist == 0:
+        default_plans = [
+            ('Basic Plan', 299, 30,
+             '5 Users, 10GB Storage, Email Support, Basic Analytics'),
+            ('Standard Plan', 599, 90,
+             '25 Users, 50GB Storage, Priority Support, Advanced Analytics, API Access'),
+            ('Premium Plan', 999, 365,
+             'Unlimited Users, 200GB Storage, 24/7 Support, Full Analytics, API Access, Custom Branding'),
+        ]
+        cursor.executemany(
+            'INSERT INTO plans (plan_name, price, duration, features) VALUES (?, ?, ?, ?)',
+            default_plans
+        )
+
+    conn.commit()
+    conn.close()
+
+
+# ============================================
+# ROUTES - HOME PAGE
+# ============================================
+
+@app.route('/')
+def home():
+    """Display the home page."""
+    return render_template('index.html')
+
+
+# ============================================
+# ROUTES - USER AUTHENTICATION
+# ============================================
+
+@app.route('/register', methods=['GET', 'POST'])
+def register():
+    """
+    Handle user registration.
+    GET: Display the registration form.
+    POST: Process the registration data.
+    """
+    if request.method == 'POST':
+        # Get form data
+        name = request.form['name'].strip()
+        email = request.form['email'].strip().lower()
+        password = request.form['password']
+        confirm_password = request.form['confirm_password']
+
+        # Validate inputs
+        if not name or not email or not password:
+            flash('All fields are required!', 'danger')
+            return redirect(url_for('register'))
+
+        if password != confirm_password:
+            flash('Passwords do not match!', 'danger')
+            return redirect(url_for('register'))
+
+        if len(password) < 6:
+            flash('Password must be at least 6 characters!', 'danger')
+            return redirect(url_for('register'))
+
+        # Check if email already exists
+        conn = get_db()
+        existing_user = conn.execute(
+            'SELECT id FROM users WHERE email = ?', (email,)
+        ).fetchone()
+
+        if existing_user:
+            conn.close()
+            flash('Email already registered! Please login.', 'warning')
+            return redirect(url_for('login'))
+
+        # Hash password and save user
+        hashed_password = generate_password_hash(password)
+        conn.execute(
+            'INSERT INTO users (name, email, password) VALUES (?, ?, ?)',
+            (name, email, hashed_password)
+        )
+        conn.commit()
+        conn.close()
+
+        flash('Registration successful! Please login.', 'success')
+        return redirect(url_for('login'))
+
+    return render_template('register.html')
+
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    """
+    Handle user login.
+    GET: Display the login form.
+    POST: Verify credentials and create session.
+    """
+    if request.method == 'POST':
+        email = request.form['email'].strip().lower()
+        password = request.form['password']
+
+        # Find user in database
+        conn = get_db()
+        user = conn.execute(
+            'SELECT * FROM users WHERE email = ?', (email,)
+        ).fetchone()
+        conn.close()
+
+        # Verify credentials
+        if user and check_password_hash(user[3], password):
+            # Set session variables
+            session['user_id'] = user[0]
+            session['user_name'] = user[1]
+            session['user_email'] = user[2]
+            session['is_admin'] = bool(user[4])
+
+            flash(f'Welcome back, {user[1]}!', 'success')
+
+            # Redirect admin to admin dashboard
+            if user[4]:
+                return redirect(url_for('admin_dashboard'))
+            return redirect(url_for('dashboard'))
+        else:
+            flash('Invalid email or password!', 'danger')
+            return redirect(url_for('login'))
+
+    return render_template('login.html')
+
+
+@app.route('/logout')
+def logout():
+    """Clear the session and log the user out."""
+    session.clear()
+    flash('You have been logged out.', 'info')
+    return redirect(url_for('home'))
+
+
+# ============================================
+# ROUTES - SUBSCRIPTION PLANS
+# ============================================
+
+@app.route('/plans')
+def plans():
+    """Display all available subscription plans."""
+    conn = get_db()
+    all_plans = conn.execute('SELECT * FROM plans').fetchall()
+    conn.close()
+    return render_template('plans.html', plans=all_plans)
+
+
+# ============================================
+# ROUTES - USER DASHBOARD
+# ============================================
+
+@app.route('/dashboard')
+def dashboard():
+    """
+    Display the user dashboard.
+    Shows active subscription and payment history.
+    """
+    # Check if user is logged in
+    if 'user_id' not in session:
+        flash('Please login to access the dashboard.', 'warning')
+        return redirect(url_for('login'))
+
+    user_id = session['user_id']
+    conn = get_db()
+
+    # Get the user's latest active subscription with plan details
+    subscription = conn.execute('''
+        SELECT s.id, s.user_id, s.plan_id, s.plan_id, s.start_date, s.end_date,
+               s.status, p.plan_name, p.price, p.duration
+        FROM subscriptions s
+        JOIN plans p ON s.plan_id = p.id
+        WHERE s.user_id = ?
+        ORDER BY s.id DESC LIMIT 1
+    ''', (user_id,)).fetchone()
+
+    # Get payment history
+    payments = conn.execute(
+        'SELECT * FROM payments WHERE user_id = ? ORDER BY id DESC',
+        (user_id,)
+    ).fetchall()
+
+    conn.close()
+
+    return render_template('dashboard.html',
+                           subscription=subscription,
+                           payments=payments)
+
+
+# ============================================
+# ROUTES - SUBSCRIBE TO A PLAN
+# ============================================
+
+@app.route('/subscribe/<int:plan_id>')
+def subscribe(plan_id):
+    """
+    Redirect user to the payment page for the selected plan.
+    """
+    if 'user_id' not in session:
+        flash('Please login to subscribe.', 'warning')
+        return redirect(url_for('login'))
+
+    conn = get_db()
+    plan = conn.execute('SELECT * FROM plans WHERE id = ?', (plan_id,)).fetchone()
+    conn.close()
+
+    if not plan:
+        flash('Plan not found!', 'danger')
+        return redirect(url_for('plans'))
+
+    return render_template('payment.html', plan=plan)
+
+
+@app.route('/process_payment/<int:plan_id>', methods=['POST'])
+def process_payment(plan_id):
+    """
+    Process the mock payment and create subscription.
+    In a real app, this would integrate with a payment gateway.
+    """
+    if 'user_id' not in session:
+        flash('Please login first.', 'warning')
+        return redirect(url_for('login'))
+
+    user_id = session['user_id']
+    conn = get_db()
+
+    # Get plan details
+    plan = conn.execute('SELECT * FROM plans WHERE id = ?', (plan_id,)).fetchone()
+
+    if not plan:
+        conn.close()
+        flash('Plan not found!', 'danger')
+        return redirect(url_for('plans'))
+
+    # Calculate subscription dates
+    start_date = datetime.now().strftime('%Y-%m-%d')
+    end_date = (datetime.now() + timedelta(days=plan[3])).strftime('%Y-%m-%d')
+
+    # Cancel any existing active subscriptions
+    conn.execute(
+        "UPDATE subscriptions SET status = 'expired' WHERE user_id = ? AND status = 'active'",
+        (user_id,)
+    )
+
+    # Create new subscription
+    conn.execute(
+        'INSERT INTO subscriptions (user_id, plan_id, start_date, end_date, status) VALUES (?, ?, ?, ?, ?)',
+        (user_id, plan_id, start_date, end_date, 'active')
+    )
+
+    # Record payment
+    payment_date = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    conn.execute(
+        'INSERT INTO payments (user_id, amount, payment_date, payment_status) VALUES (?, ?, ?, ?)',
+        (user_id, plan[2], payment_date, 'success')
+    )
+
+    conn.commit()
+    conn.close()
+
+    # Show payment success page
+    return render_template('payment_success.html',
+                           plan_name=plan[1],
+                           amount=plan[2],
+                           date=payment_date)
+
+
+# ============================================
+# ROUTES - CANCEL SUBSCRIPTION
+# ============================================
+
+@app.route('/cancel_subscription/<int:sub_id>')
+def cancel_subscription(sub_id):
+    """Cancel an active subscription."""
+    if 'user_id' not in session:
+        flash('Please login first.', 'warning')
+        return redirect(url_for('login'))
+
+    conn = get_db()
+    conn.execute(
+        "UPDATE subscriptions SET status = 'cancelled' WHERE id = ? AND user_id = ?",
+        (sub_id, session['user_id'])
+    )
+    conn.commit()
+    conn.close()
+
+    flash('Subscription cancelled successfully.', 'info')
+    return redirect(url_for('dashboard'))
+
+
+# ============================================
+# ROUTES - ADMIN PANEL
+# ============================================
+
+@app.route('/admin')
+def admin_dashboard():
+    """
+    Display the admin dashboard.
+    Only accessible by admin users.
+    """
+    if 'user_id' not in session or not session.get('is_admin'):
+        flash('Access denied! Admin only.', 'danger')
+        return redirect(url_for('home'))
+
+    conn = get_db()
+
+    # Get all data for admin
+    all_plans = conn.execute('SELECT * FROM plans').fetchall()
+    all_users = conn.execute(
+        'SELECT id, name, email FROM users WHERE is_admin = 0'
+    ).fetchall()
+
+    # Get subscriptions with user and plan names
+    all_subs = conn.execute('''
+        SELECT s.id, s.user_id, s.plan_id, s.status, s.start_date, s.end_date,
+               u.name, p.plan_name
+        FROM subscriptions s
+        JOIN users u ON s.user_id = u.id
+        JOIN plans p ON s.plan_id = p.id
+        ORDER BY s.id DESC
+    ''').fetchall()
+
+    # Get payments with user names
+    all_payments = conn.execute('''
+        SELECT p.id, p.user_id, p.amount, p.payment_date, p.payment_status,
+               u.name
+        FROM payments p
+        JOIN users u ON p.user_id = u.id
+        ORDER BY p.id DESC
+    ''').fetchall()
+
+    conn.close()
+
+    return render_template('admin.html',
+                           plans=all_plans,
+                           users=all_users,
+                           subscriptions=all_subs,
+                           payments=all_payments)
+
+
+@app.route('/admin/add_plan', methods=['POST'])
+def add_plan():
+    """Add a new subscription plan (admin only)."""
+    if 'user_id' not in session or not session.get('is_admin'):
+        flash('Access denied!', 'danger')
+        return redirect(url_for('home'))
+
+    plan_name = request.form['plan_name'].strip()
+    price = float(request.form['price'])
+    duration = int(request.form['duration'])
+    features = request.form['features'].strip()
+
+    conn = get_db()
+    conn.execute(
+        'INSERT INTO plans (plan_name, price, duration, features) VALUES (?, ?, ?, ?)',
+        (plan_name, price, duration, features)
+    )
+    conn.commit()
+    conn.close()
+
+    flash(f'Plan "{plan_name}" added successfully!', 'success')
+    return redirect(url_for('admin_dashboard'))
+
+
+@app.route('/admin/edit_plan/<int:plan_id>', methods=['GET', 'POST'])
+def edit_plan(plan_id):
+    """Edit an existing subscription plan (admin only)."""
+    if 'user_id' not in session or not session.get('is_admin'):
+        flash('Access denied!', 'danger')
+        return redirect(url_for('home'))
+
+    conn = get_db()
+
+    if request.method == 'POST':
+        plan_name = request.form['plan_name'].strip()
+        price = float(request.form['price'])
+        duration = int(request.form['duration'])
+        features = request.form['features'].strip()
+
+        conn.execute(
+            'UPDATE plans SET plan_name=?, price=?, duration=?, features=? WHERE id=?',
+            (plan_name, price, duration, features, plan_id)
+        )
+        conn.commit()
+        conn.close()
+
+        flash(f'Plan "{plan_name}" updated successfully!', 'success')
+        return redirect(url_for('admin_dashboard'))
+
+    # GET request - show edit form
+    plan = conn.execute('SELECT * FROM plans WHERE id = ?', (plan_id,)).fetchone()
+    conn.close()
+
+    if not plan:
+        flash('Plan not found!', 'danger')
+        return redirect(url_for('admin_dashboard'))
+
+    return render_template('edit_plan.html', plan=plan)
+
+
+@app.route('/admin/delete_plan/<int:plan_id>')
+def delete_plan(plan_id):
+    """Delete a subscription plan (admin only)."""
+    if 'user_id' not in session or not session.get('is_admin'):
+        flash('Access denied!', 'danger')
+        return redirect(url_for('home'))
+
+    conn = get_db()
+    conn.execute('DELETE FROM plans WHERE id = ?', (plan_id,))
+    conn.commit()
+    conn.close()
+
+    flash('Plan deleted successfully!', 'success')
+    return redirect(url_for('admin_dashboard'))
+
+
+# ============================================
+# ROUTES - ABOUT PAGE
+# ============================================
+
+@app.route('/about')
+def about():
+    """Display the about/contact page."""
+    return render_template('about.html')
+
+
+# ============================================
+# RUN THE APPLICATION
+# ============================================
+
+if __name__ == '__main__':
+    # Initialize the database when the app starts
+    init_db()
+    print('=' * 50)
+    print('  Online Subscription Management System')
+    print('  Running on: http://127.0.0.1:5000')
+    print('  Admin Login: admin@submanager.com / admin123')
+    print('=' * 50)
+    # Run the Flask development server
+    port = int(os.environ.get('PORT', 5000))
+    app.run(host='0.0.0.0', port=port, debug=False)

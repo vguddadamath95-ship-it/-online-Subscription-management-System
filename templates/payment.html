@@ -1,0 +1,47 @@
+<!--
+    Payment Page - Online Subscription Management System
+    Mock payment processing page.
+-->
+{% extends 'base.html' %}
+{% block title %}Payment{% endblock %}
+{% block content %}
+<section class="py-5">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-6">
+                <div class="payment-card">
+                    <h4 class="fw-bold text-center mb-4"><i class="bi bi-credit-card me-2 text-primary"></i>Complete Payment</h4>
+                    <div class="card p-3 mb-4" style="background: #f8f9fd;">
+                        <div class="d-flex justify-content-between"><span class="text-muted">Plan:</span><span class="fw-bold">{{ plan[1] }}</span></div>
+                        <div class="d-flex justify-content-between mt-2"><span class="text-muted">Duration:</span><span>{{ plan[3] }} days</span></div>
+                        <hr>
+                        <div class="d-flex justify-content-between"><span class="fw-bold">Total Amount:</span><span class="fw-bold text-primary fs-5">₹{{ plan[2] }}</span></div>
+                    </div>
+                    <form method="POST" action="{{ url_for('process_payment', plan_id=plan[0]) }}">
+                        <div class="mb-3">
+                            <label for="card_number" class="form-label">Card Number</label>
+                            <input type="text" class="form-control" id="card_number" placeholder="1234 5678 9012 3456" maxlength="19" required>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-6">
+                                <label for="expiry" class="form-label">Expiry Date</label>
+                                <input type="text" class="form-control" id="expiry" placeholder="MM/YY" maxlength="5" required>
+                            </div>
+                            <div class="col-6">
+                                <label for="cvv" class="form-label">CVV</label>
+                                <input type="password" class="form-control" id="cvv" placeholder="***" maxlength="3" required>
+                            </div>
+                        </div>
+                        <div class="mb-4">
+                            <label for="card_name" class="form-label">Cardholder Name</label>
+                            <input type="text" class="form-control" id="card_name" placeholder="Your Name" required>
+                        </div>
+                        <button type="submit" class="btn btn-success w-100 btn-lg"><i class="bi bi-lock me-2"></i>Pay ₹{{ plan[2] }}</button>
+                        <p class="text-center text-muted mt-3 small"><i class="bi bi-shield-check me-1"></i>This is a mock payment for demonstration purposes</p>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

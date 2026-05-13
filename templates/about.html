@@ -1,0 +1,93 @@
+<!--
+    About / Contact Page - Online Subscription Management System
+-->
+{% extends 'base.html' %}
+{% block title %}About{% endblock %}
+{% block content %}
+<!-- Header -->
+<section class="py-5" style="background: linear-gradient(135deg, #6c5ce7, #a29bfe);">
+    <div class="container text-center text-white">
+        <h1 class="fw-bold">About Us</h1>
+        <p class="opacity-75">Learn more about SubManager and get in touch</p>
+    </div>
+</section>
+
+<!-- About Section -->
+<section class="about-section">
+    <div class="container">
+        <div class="row align-items-center mb-5">
+            <div class="col-md-6">
+                <h2 class="fw-bold mb-3">What is SubManager?</h2>
+                <p class="text-muted">SubManager is an Online Subscription Management System built as a college micro project. It allows users to browse subscription plans, subscribe, manage their subscriptions, and track payment history.</p>
+                <p class="text-muted">This project demonstrates full-stack web development using Python Flask for the backend, SQLite for the database, and HTML/CSS/Bootstrap for the frontend.</p>
+                <h5 class="fw-bold mt-4 mb-3">Technologies Used:</h5>
+                <div class="d-flex flex-wrap gap-2">
+                    <span class="badge bg-primary p-2">Python Flask</span>
+                    <span class="badge bg-success p-2">SQLite</span>
+                    <span class="badge bg-info p-2">HTML5</span>
+                    <span class="badge bg-warning text-dark p-2">CSS3</span>
+                    <span class="badge bg-danger p-2">JavaScript</span>
+                    <span class="badge bg-secondary p-2">Bootstrap 5</span>
+                </div>
+            </div>
+            <div class="col-md-6 text-center">
+                <div class="p-5">
+                    <i class="bi bi-box-seam" style="font-size: 8rem; color: #6c5ce7; opacity: 0.3;"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- Contact Cards -->
+        <h3 class="fw-bold text-center mb-4">Contact Us</h3>
+        <div class="row g-4 mb-5">
+            <div class="col-md-4">
+                <div class="contact-info-card">
+                    <div class="icon"><i class="bi bi-envelope"></i></div>
+                    <h5 class="fw-bold">Email</h5>
+                    <p class="text-muted mb-0">support@submanager.com</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="contact-info-card">
+                    <div class="icon" style="background: linear-gradient(135deg, #00cec9, #55efc4);"><i class="bi bi-telephone"></i></div>
+                    <h5 class="fw-bold">Phone</h5>
+                    <p class="text-muted mb-0">+91 98765 43210</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="contact-info-card">
+                    <div class="icon" style="background: linear-gradient(135deg, #fd79a8, #fab1a0);"><i class="bi bi-geo-alt"></i></div>
+                    <h5 class="fw-bold">Address</h5>
+                    <p class="text-muted mb-0">Bangalore, India</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Contact Form -->
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <div class="card p-4">
+                    <h5 class="fw-bold mb-3"><i class="bi bi-chat-dots me-2 text-primary"></i>Send us a Message</h5>
+                    <form>
+                        <div class="row mb-3">
+                            <div class="col-md-6 mb-3 mb-md-0">
+                                <label for="contact_name" class="form-label">Your Name</label>
+                                <input type="text" class="form-control" id="contact_name" placeholder="Enter name">
+                            </div>
+                            <div class="col-md-6">
+                                <label for="contact_email" class="form-label">Your Email</label>
+                                <input type="email" class="form-control" id="contact_email" placeholder="Enter email">
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="contact_message" class="form-label">Message</label>
+                            <textarea class="form-control" id="contact_message" rows="4" placeholder="Type your message..."></textarea>
+                        </div>
+                        <button type="button" class="btn btn-primary" onclick="alert('Thank you for your message! (Demo only)')"><i class="bi bi-send me-2"></i>Send Message</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

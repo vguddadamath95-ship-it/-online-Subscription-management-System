@@ -1,0 +1,187 @@
+<!--
+    User Dashboard - Online Subscription Management System
+    Shows the user's active subscription, payment history, and quick actions.
+-->
+{% extends 'base.html' %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+
+<section class="py-5">
+    <div class="container">
+        <!-- Welcome Header -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h2 class="fw-bold mb-1">Welcome, {{ session.get('user_name', 'User') }}!</h2>
+                <p class="text-muted mb-0">Here's an overview of your subscription</p>
+            </div>
+            <a href="{{ url_for('plans') }}" class="btn btn-primary">
+                <i class="bi bi-plus-circle me-2"></i>Browse Plans
+            </a>
+        </div>
+
+        <!-- ===== Subscription Status ===== -->
+        <div class="row g-4 mb-4">
+            {% if subscription %}
+            <!-- Active Subscription Card -->
+            <div class="col-md-8">
+                <div class="card p-4">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <h5 class="fw-bold mb-0">
+                            <i class="bi bi-box-seam me-2 text-primary"></i>Current Subscription
+                        </h5>
+                        {% if subscription[6] == 'active' %}
+                            <span class="badge-active">● Active</span>
+                        {% elif subscription[6] == 'expired' %}
+                            <span class="badge-expired">● Expired</span>
+                        {% else %}
+                            <span class="badge-cancelled">● Cancelled</span>
+                        {% endif %}
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <table class="table table-borderless mb-0">
+                                <tr>
+                                    <td class="text-muted fw-500">Plan Name:</td>
+                                    <td class="fw-bold">{{ subscription[7] }}</td>
+                                </tr>
+                                <tr>
+                                    <td class="text-muted fw-500">Price:</td>
+                                    <td class="fw-bold">₹{{ subscription[8] }}</td>
+                                </tr>
+                                <tr>
+                                    <td class="text-muted fw-500">Start Date:</td>
+                                    <td>{{ subscription[4] }}</td>
+                                </tr>
+                            </table>
+                        </div>
+                        <div class="col-md-6">
+                            <table class="table table-borderless mb-0">
+                                <tr>
+                                    <td class="text-muted fw-500">End Date:</td>
+                                    <td>{{ subscription[5] }}</td>
+                                </tr>
+                                <tr>
+                                    <td class="text-muted fw-500">Duration:</td>
+                                    <td>{{ subscription[9] }} days</td>
+                                </tr>
+                                <tr>
+                                    <td class="text-muted fw-500">Status:</td>
+                                    <td class="fw-bold text-capitalize">{{ subscription[6] }}</td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="mt-3 pt-3 border-top">
+                        {% if subscription[6] == 'active' %}
+                            <a href="{{ url_for('subscribe', plan_id=subscription[3]) }}" class="btn btn-success me-2">
+                                <i class="bi bi-arrow-repeat me-1"></i>Renew Subscription
+                            </a>
+                            <a href="{{ url_for('cancel_subscription', sub_id=subscription[0]) }}" 
+                               class="btn btn-danger" onclick="return confirmCancel()">
+                                <i class="bi bi-x-circle me-1"></i>Cancel Subscription
+                            </a>
+                        {% elif subscription[6] == 'expired' %}
+                            <a href="{{ url_for('plans') }}" class="btn btn-primary">
+                                <i class="bi bi-arrow-repeat me-1"></i>Renew / Choose New Plan
+                            </a>
+                        {% else %}
+                            <a href="{{ url_for('plans') }}" class="btn btn-primary">
+                                <i class="bi bi-cart-plus me-1"></i>Subscribe to a New Plan
+                            </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Stats -->
+            <div class="col-md-4">
+                <div class="stat-card mb-3" style="border-left-color: #6c5ce7;">
+                    <div class="d-flex align-items-center">
+                        <div class="stat-icon bg-purple me-3">
+                            <i class="bi bi-box-seam"></i>
+                        </div>
+                        <div>
+                            <h3>{{ subscription[7] }}</h3>
+                            <p>Current Plan</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="stat-card" style="border-left-color: #00b894;">
+                    <div class="d-flex align-items-center">
+                        <div class="stat-icon bg-green me-3">
+                            <i class="bi bi-credit-card"></i>
+                        </div>
+                        <div>
+                            <h3>₹{{ subscription[8] }}</h3>
+                            <p>Amount Paid</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {% else %}
+            <!-- No Subscription -->
+            <div class="col-12">
+                <div class="card p-5 text-center">
+                    <i class="bi bi-inbox" style="font-size: 4rem; color: #b2bec3;"></i>
+                    <h4 class="mt-3 text-muted">No Active Subscription</h4>
+                    <p class="text-muted">You haven't subscribed to any plan yet.</p>
+                    <div>
+                        <a href="{{ url_for('plans') }}" class="btn btn-primary">
+                            <i class="bi bi-card-list me-2"></i>Browse Plans
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- ===== Payment History ===== -->
+        <div class="card p-4">
+            <h5 class="fw-bold mb-3">
+                <i class="bi bi-clock-history me-2 text-primary"></i>Payment History
+            </h5>
+
+            {% if payments %}
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Amount</th>
+                            <th>Payment Date</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for payment in payments %}
+                        <tr>
+                            <td>{{ loop.index }}</td>
+                            <td class="fw-bold">₹{{ payment[2] }}</td>
+                            <td>{{ payment[3] }}</td>
+                            <td>
+                                {% if payment[4] == 'success' %}
+                                    <span class="badge-active">✓ Success</span>
+                                {% else %}
+                                    <span class="badge-expired">✗ Failed</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <p class="text-muted text-center mb-0">No payment records found.</p>
+            {% endif %}
+        </div>
+
+    </div>
+</section>
+
+{% endblock %}
