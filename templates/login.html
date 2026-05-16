@@ -15,41 +15,44 @@
             <i class="bi bi-box-arrow-in-right"></i>
         </div>
 
-        <h2 class="text-center">Welcome Back</h2>
-        <p class="text-center text-muted mb-4">Login to your account</p>
+        <h2>Welcome Back</h2>
+        <p class="auth-subtitle">Sign in to access your subscription dashboard</p>
 
         <!-- Login Form -->
-        <form method="POST" action="{{ url_for('login') }}" onsubmit="return validateLoginForm()">
+        <form method="POST" action="{{ url_for('login') }}" class="mt-4" onsubmit="return validateLoginForm()">
             <!-- Email Field -->
-            <div class="mb-3">
+            <div class="form-group">
                 <label for="email" class="form-label">Email Address</label>
-                <div class="input-group">
-                    <span class="input-group-text"><i class="bi bi-envelope"></i></span>
+                <div class="input-group mb-2">
+                    <span class="input-group-text" style="background: rgba(128, 128, 0, 0.1); border-color: #e5e7eb;"><i class="bi bi-envelope" style="color: #808000;"></i></span>
                     <input type="email" class="form-control" id="email" name="email" 
-                           placeholder="Enter your email" required>
+                           placeholder="Enter your email address" required 
+                           data-bs-toggle="tooltip" title="Enter the email associated with your account">
                 </div>
+                <small class="form-text">We'll never share your email with anyone else.</small>
             </div>
 
             <!-- Password Field -->
-            <div class="mb-4">
+            <div class="form-group">
                 <label for="password" class="form-label">Password</label>
-                <div class="input-group">
-                    <span class="input-group-text"><i class="bi bi-lock"></i></span>
+                <div class="input-group mb-2">
+                    <span class="input-group-text" style="background: rgba(128, 128, 0, 0.1); border-color: #e5e7eb;"><i class="bi bi-lock" style="color: #808000;"></i></span>
                     <input type="password" class="form-control" id="password" name="password" 
-                           placeholder="Enter your password" required>
+                           placeholder="Enter your password" required 
+                           data-bs-toggle="tooltip" title="Enter your account password">
                 </div>
             </div>
 
             <!-- Submit Button -->
-            <button type="submit" class="btn btn-primary w-100 mb-3">
-                <i class="bi bi-box-arrow-in-right me-2"></i>Login
+            <button type="submit" class="btn btn-primary w-100 mt-3 mb-3">
+                <i class="bi bi-box-arrow-in-right me-2"></i>Sign In
             </button>
         </form>
 
         <!-- Register Link -->
-        <p class="text-center text-muted mb-0">
-            Don't have an account? <a href="{{ url_for('register') }}">Register here</a>
-        </p>
+        <div class="auth-link">
+            <p class="mb-0">Don't have an account? <a href="{{ url_for('register') }}">Create one now</a></p>
+        </div>
     </div>
 </div>
 

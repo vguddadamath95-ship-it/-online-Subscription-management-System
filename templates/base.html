@@ -8,8 +8,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Online Subscription Management System - Manage your subscriptions easily">
-    <title>{% block title %}SubManager{% endblock %} | Online Subscription Management</title>
+    <meta name="description" content="Online Subscription Management System - Manage your subscriptions easily with our modern, intuitive platform">
+    <title>{% block title %}SubManager{% endblock %} | Subscription Management</title>
 
     <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -21,15 +21,15 @@
 <body>
 
     <!-- ===== Navbar ===== -->
-    <nav class="navbar navbar-expand-lg navbar-dark">
+    <nav class="navbar navbar-expand-lg navbar-light sticky-top">
         <div class="container">
             <!-- Brand Logo -->
-            <a class="navbar-brand" href="{{ url_for('home') }}">
-                <i class="bi bi-box-seam me-2"></i>SubManager
+            <a class="navbar-brand" href="{{ url_for('home') }}" title="SubManager - Your Subscription Management Platform">
+                <i class="bi bi-check-circle me-2"></i><strong>SubManager</strong>
             </a>
 
             <!-- Mobile Toggle Button -->
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
 
@@ -37,52 +37,52 @@
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav me-auto">
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('home') }}">
+                        <a class="nav-link" href="{{ url_for('home') }}" data-bs-toggle="tooltip" title="Go to Home">
                             <i class="bi bi-house me-1"></i>Home
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('plans') }}">
-                            <i class="bi bi-card-list me-1"></i>Plans
+                        <a class="nav-link" href="{{ url_for('plans') }}" data-bs-toggle="tooltip" title="Browse available plans">
+                            <i class="bi bi-collection me-1"></i>Plans
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('about') }}">
+                        <a class="nav-link" href="{{ url_for('about') }}" data-bs-toggle="tooltip" title="Learn more about us">
                             <i class="bi bi-info-circle me-1"></i>About
                         </a>
                     </li>
                 </ul>
 
                 <!-- Right Side Links -->
-                <ul class="navbar-nav">
+                <ul class="navbar-nav ms-auto">
                     {% if session.get('user_id') %}
                         <!-- If user is logged in -->
                         {% if session.get('is_admin') %}
                             <li class="nav-item">
-                                <a class="nav-link" href="{{ url_for('admin_dashboard') }}">
+                                <a class="nav-link" href="{{ url_for('admin_dashboard') }}" data-bs-toggle="tooltip" title="Admin panel">
                                     <i class="bi bi-gear me-1"></i>Admin
                                 </a>
                             </li>
                         {% endif %}
                         <li class="nav-item">
-                            <a class="nav-link" href="{{ url_for('dashboard') }}">
+                            <a class="nav-link" href="{{ url_for('dashboard') }}" data-bs-toggle="tooltip" title="View your dashboard">
                                 <i class="bi bi-speedometer2 me-1"></i>Dashboard
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="{{ url_for('logout') }}">
+                            <a class="nav-link" href="{{ url_for('logout') }}" data-bs-toggle="tooltip" title="Sign out">
                                 <i class="bi bi-box-arrow-right me-1"></i>Logout
                             </a>
                         </li>
                     {% else %}
                         <!-- If user is not logged in -->
                         <li class="nav-item">
-                            <a class="nav-link" href="{{ url_for('login') }}">
+                            <a class="nav-link" href="{{ url_for('login') }}" data-bs-toggle="tooltip" title="Sign in to your account">
                                 <i class="bi bi-box-arrow-in-right me-1"></i>Login
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="{{ url_for('register') }}">
+                            <a class="nav-link" href="{{ url_for('register') }}" data-bs-toggle="tooltip" title="Create a new account">
                                 <i class="bi bi-person-plus me-1"></i>Register
                             </a>
                         </li>
@@ -93,7 +93,7 @@
     </nav>
 
     <!-- ===== Flash Messages ===== -->
-    <div class="container mt-3">
+    <div class="container mt-4">
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
                 {% for category, message in messages %}
@@ -121,34 +121,37 @@
     </main>
 
     <!-- ===== Footer ===== -->
-    <footer class="footer">
+    <footer class="footer mt-5">
         <div class="container">
-            <div class="row">
+            <div class="row g-4">
                 <!-- About Column -->
-                <div class="col-md-4 mb-3">
-                    <h5><i class="bi bi-box-seam me-2"></i>SubManager</h5>
-                    <p>A simple and easy-to-use online subscription management system. Built as a college micro project using Flask and SQLite.</p>
+                <div class="col-md-4">
+                    <h5><i class="bi bi-check-circle me-2"></i>SubManager</h5>
+                    <p>Manage your subscriptions effortlessly with our modern platform. Secure, intuitive, and designed for your convenience.</p>
                 </div>
                 <!-- Quick Links -->
-                <div class="col-md-4 mb-3">
+                <div class="col-md-4">
                     <h5>Quick Links</h5>
                     <ul class="list-unstyled">
                         <li class="mb-2"><a href="{{ url_for('home') }}"><i class="bi bi-chevron-right me-1"></i>Home</a></li>
                         <li class="mb-2"><a href="{{ url_for('plans') }}"><i class="bi bi-chevron-right me-1"></i>Plans</a></li>
                         <li class="mb-2"><a href="{{ url_for('about') }}"><i class="bi bi-chevron-right me-1"></i>About</a></li>
+                        {% if session.get('user_id') %}
+                        <li class="mb-2"><a href="{{ url_for('dashboard') }}"><i class="bi bi-chevron-right me-1"></i>Dashboard</a></li>
+                        {% endif %}
                     </ul>
                 </div>
                 <!-- Contact Info -->
-                <div class="col-md-4 mb-3">
-                    <h5>Contact</h5>
-                    <p class="mb-2"><i class="bi bi-envelope me-2"></i>support@submanager.com</p>
+                <div class="col-md-4">
+                    <h5>Get in Touch</h5>
+                    <p class="mb-2"><i class="bi bi-envelope me-2"></i><a href="mailto:support@submanager.com">support@submanager.com</a></p>
                     <p class="mb-2"><i class="bi bi-telephone me-2"></i>+91 98765 43210</p>
-                    <p class="mb-2"><i class="bi bi-geo-alt me-2"></i>Bangalore, India</p>
+                    <p class="mb-0"><i class="bi bi-geo-alt me-2"></i>Bangalore, India</p>
                 </div>
             </div>
             <!-- Copyright -->
-            <div class="footer-bottom text-center">
-                <p class="mb-0">&copy; 2026 SubManager. All rights reserved. | College Micro Project</p>
+            <div class="footer-bottom mt-4">
+                <p class="mb-0">&copy; 2026 SubManager. All rights reserved. | Built with <i class="bi bi-heart-fill"></i> using Flask</p>
             </div>
         </div>
     </footer>
@@ -157,5 +160,15 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <!-- Custom JS -->
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    <script>
+        // Initialize tooltips
+        document.addEventListener('DOMContentLoaded', function () {
+            const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+            tooltipTriggerList.map(function (tooltipTriggerEl) {
+                return new bootstrap.Tooltip(tooltipTriggerEl);
+            });
+        });
+    </script>
 </body>
 </html>
+

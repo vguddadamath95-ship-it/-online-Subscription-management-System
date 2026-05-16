@@ -15,61 +15,67 @@
             <i class="bi bi-person-plus"></i>
         </div>
 
-        <h2 class="text-center">Create Account</h2>
-        <p class="text-center text-muted mb-4">Join us and start managing subscriptions</p>
+        <h2>Create Your Account</h2>
+        <p class="auth-subtitle">Join thousands managing their subscriptions easily</p>
 
         <!-- Registration Form -->
-        <form method="POST" action="{{ url_for('register') }}" onsubmit="return validateRegisterForm()">
+        <form method="POST" action="{{ url_for('register') }}" class="mt-4" onsubmit="return validateRegisterForm()">
             <!-- Name Field -->
-            <div class="mb-3">
+            <div class="form-group">
                 <label for="name" class="form-label">Full Name</label>
-                <div class="input-group">
-                    <span class="input-group-text"><i class="bi bi-person"></i></span>
+                <div class="input-group mb-2">
+                    <span class="input-group-text" style="background: rgba(128, 128, 0, 0.1); border-color: #e5e7eb;"><i class="bi bi-person" style="color: #808000;"></i></span>
                     <input type="text" class="form-control" id="name" name="name" 
-                           placeholder="Enter your full name" required>
+                           placeholder="John Doe" required 
+                           data-bs-toggle="tooltip" title="Enter your full name">
                 </div>
             </div>
 
             <!-- Email Field -->
-            <div class="mb-3">
+            <div class="form-group">
                 <label for="email" class="form-label">Email Address</label>
-                <div class="input-group">
-                    <span class="input-group-text"><i class="bi bi-envelope"></i></span>
+                <div class="input-group mb-2">
+                    <span class="input-group-text" style="background: rgba(128, 128, 0, 0.1); border-color: #e5e7eb;"><i class="bi bi-envelope" style="color: #808000;"></i></span>
                     <input type="email" class="form-control" id="email" name="email" 
-                           placeholder="Enter your email" required>
+                           placeholder="your.email@example.com" required 
+                           data-bs-toggle="tooltip" title="Enter a valid email address">
                 </div>
+                <small class="form-text">We'll use this to secure your account.</small>
             </div>
 
             <!-- Password Field -->
-            <div class="mb-3">
+            <div class="form-group">
                 <label for="password" class="form-label">Password</label>
-                <div class="input-group">
-                    <span class="input-group-text"><i class="bi bi-lock"></i></span>
+                <div class="input-group mb-2">
+                    <span class="input-group-text" style="background: rgba(128, 128, 0, 0.1); border-color: #e5e7eb;"><i class="bi bi-lock" style="color: #808000;"></i></span>
                     <input type="password" class="form-control" id="password" name="password" 
-                           placeholder="Min 6 characters" required minlength="6">
+                           placeholder="At least 6 characters" required minlength="6" 
+                           data-bs-toggle="tooltip" title="Create a strong password">
                 </div>
+                <small class="form-text">Use at least 6 characters for security.</small>
             </div>
 
             <!-- Confirm Password Field -->
-            <div class="mb-4">
+            <div class="form-group">
                 <label for="confirm_password" class="form-label">Confirm Password</label>
-                <div class="input-group">
-                    <span class="input-group-text"><i class="bi bi-lock-fill"></i></span>
+                <div class="input-group mb-2">
+                    <span class="input-group-text" style="background: rgba(128, 128, 0, 0.1); border-color: #e5e7eb;"><i class="bi bi-lock-fill" style="color: #808000;"></i></span>
                     <input type="password" class="form-control" id="confirm_password" name="confirm_password" 
-                           placeholder="Re-enter your password" required>
+                           placeholder="Re-enter your password" required 
+                           data-bs-toggle="tooltip" title="Confirm your password">
                 </div>
             </div>
 
             <!-- Submit Button -->
-            <button type="submit" class="btn btn-primary w-100 mb-3">
-                <i class="bi bi-person-plus me-2"></i>Register
+            <button type="submit" class="btn btn-primary w-100 mt-3 mb-3">
+                <i class="bi bi-person-plus me-2"></i>Create Account
             </button>
         </form>
 
         <!-- Login Link -->
-        <p class="text-center text-muted mb-0">
-            Already have an account? <a href="{{ url_for('login') }}">Login here</a>
-        </p>
+        <div class="auth-link">
+            <p class="mb-0">Already have an account? <a href="{{ url_for('login') }}">Sign in here</a></p>
+        </div>
     </div>
 </div>
 

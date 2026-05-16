@@ -10,35 +10,166 @@
         <div class="row justify-content-center">
             <div class="col-md-6">
                 <div class="payment-card">
-                    <h4 class="fw-bold text-center mb-4"><i class="bi bi-credit-card me-2 text-primary"></i>Complete Payment</h4>
-                    <div class="card p-3 mb-4" style="background: #f8f9fd;">
-                        <div class="d-flex justify-content-between"><span class="text-muted">Plan:</span><span class="fw-bold">{{ plan[1] }}</span></div>
-                        <div class="d-flex justify-content-between mt-2"><span class="text-muted">Duration:</span><span>{{ plan[3] }} days</span></div>
-                        <hr>
-                        <div class="d-flex justify-content-between"><span class="fw-bold">Total Amount:</span><span class="fw-bold text-primary fs-5">₹{{ plan[2] }}</span></div>
+                    <h3 class="fw-bold text-center mb-1" style="color: #808000;">
+                        <i class="bi bi-credit-card me-2"></i>Complete Your Payment
+                    </h3>
+                    <p class="text-center text-muted mb-4">Secure payment to activate your subscription</p>
+                    
+                    <!-- Plan Summary -->
+                    <div class="card p-3 mb-4" style="background: rgba(128, 128, 0, 0.03); border: 1px solid #e5e7eb;">
+                        <div class="d-flex justify-content-between mb-2">
+                            <span style="color: #6b7280; font-weight: 500;">Plan:</span>
+                            <span style="color: #2c3e2f; font-weight: 700;">{{ plan[1] }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-3">
+                            <span style="color: #6b7280; font-weight: 500;">Duration:</span>
+                            <span style="color: #2c3e2f;">{{ plan[3] }} days</span>
+                        </div>
+                        <hr style="margin: 0.5rem 0; border-color: #e5e7eb;">
+                        <div class="d-flex justify-content-between">
+                            <span style="color: #2c3e2f; font-weight: 700;">Total Amount:</span>
+                            <span style="color: #808000; font-weight: 800; font-size: 1.3rem;">₹{{ plan[2] }}</span>
+                        </div>
                     </div>
+
+                    <!-- Payment Form -->
                     <form method="POST" action="{{ url_for('process_payment', plan_id=plan[0]) }}">
-                        <div class="mb-3">
-                            <label for="card_number" class="form-label">Card Number</label>
-                            <input type="text" class="form-control" id="card_number" placeholder="1234 5678 9012 3456" maxlength="19" required>
-                        </div>
-                        <div class="row mb-3">
-                            <div class="col-6">
-                                <label for="expiry" class="form-label">Expiry Date</label>
-                                <input type="text" class="form-control" id="expiry" placeholder="MM/YY" maxlength="5" required>
-                            </div>
-                            <div class="col-6">
-                                <label for="cvv" class="form-label">CVV</label>
-                                <input type="password" class="form-control" id="cvv" placeholder="***" maxlength="3" required>
-                            </div>
-                        </div>
+                        <!-- Payment Method Selection -->
                         <div class="mb-4">
-                            <label for="card_name" class="form-label">Cardholder Name</label>
-                            <input type="text" class="form-control" id="card_name" placeholder="Your Name" required>
+                            <label class="form-label">Choose Payment Method</label>
+                            <div class="d-flex gap-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="payment_method" id="payment_card" value="card" checked>
+                                    <label class="form-check-label" for="payment_card">
+                                        <i class="bi bi-credit-card me-1"></i>Card Payment
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="payment_method" id="payment_upi" value="upi">
+                                    <label class="form-check-label" for="payment_upi">
+                                        <i class="bi bi-telephone me-1"></i>UPI Payment
+                                    </label>
+                                </div>
+                            </div>
                         </div>
-                        <button type="submit" class="btn btn-success w-100 btn-lg"><i class="bi bi-lock me-2"></i>Pay ₹{{ plan[2] }}</button>
-                        <p class="text-center text-muted mt-3 small"><i class="bi bi-shield-check me-1"></i>This is a mock payment for demonstration purposes</p>
+
+                        <!-- Card Payment Fields -->
+                        <div id="card-fields">
+                            <div class="form-group mb-3">
+                                <label for="card_number" class="form-label">Card Number</label>
+                                <input type="text" name="card_number" class="form-control" id="card_number" 
+                                       placeholder="1234 5678 9012 3456" maxlength="19" required
+                                       data-bs-toggle="tooltip" title="Enter your 16-digit card number">
+                            </div>
+                            <div class="row mb-3">
+                                <div class="col-6">
+                                    <label for="expiry" class="form-label">Expiry Date</label>
+                                    <input type="text" name="expiry" class="form-control" id="expiry" 
+                                           placeholder="MM/YY" maxlength="5" required
+                                           data-bs-toggle="tooltip" title="Format: MM/YY">
+                                </div>
+                                <div class="col-6">
+                                    <label for="cvv" class="form-label">CVV</label>
+                                    <input type="password" name="cvv" class="form-control" id="cvv" 
+                                           placeholder="***" maxlength="3" required
+                                           data-bs-toggle="tooltip" title="3-digit security code">
+                                </div>
+                            </div>
+                            <div class="form-group mb-4">
+                                <label for="card_name" class="form-label">Cardholder Name</label>
+                                <input type="text" name="card_name" class="form-control" id="card_name" 
+                                       placeholder="John Doe" required
+                                       data-bs-toggle="tooltip" title="Name as shown on card">
+                            </div>
+                        </div>
+
+                        <!-- UPI Payment Section -->
+                        <div id="upi-section" class="d-none">
+                            <div class="card p-3 mb-4" style="background: rgba(128, 128, 0, 0.05); border: 2px solid #e5e7eb;">
+                                <h6 style="color: #808000; font-weight: 700; margin-bottom: 0.5rem;">
+                                    <i class="bi bi-phone me-2"></i>UPI Payment
+                                </h6>
+                                <p class="text-muted small mb-3">Scan this QR code and complete the payment in your UPI app</p>
+                                
+                                <!-- QR Code -->
+                                <div class="d-flex justify-content-center mb-3">
+                                    <img id="upi_qr" src="" alt="UPI QR Code" class="rounded-3" style="width: 180px; height: 180px; background: #fff; padding: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);" />
+                                </div>
+
+                                <!-- UPI ID Display -->
+                                <div class="text-center py-2 bg-white rounded-2 mb-3" style="border: 1px solid #e5e7eb;">
+                                    <div class="fw-semibold" id="generated_upi" style="color: #808000;">{{ session.user_email.split('@')[0] }}@pay</div>
+                                    <p class="small text-muted mb-0">Your UPI ID for payment</p>
+                                </div>
+
+                                <!-- Confirmation Checkbox -->
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="upi_confirmed" name="upi_confirmed" value="yes">
+                                    <label class="form-check-label" for="upi_confirmed">
+                                        <small>I have completed the UPI payment in my app</small>
+                                    </label>
+                                </div>
+                            </div>
+                            <input type="hidden" name="upi_id" id="upi_id" value="{{ session.user_email.split('@')[0] }}@pay">
+                        </div>
+
+                        <!-- Submit Button -->
+                        <button type="submit" class="btn btn-primary w-100 btn-lg mb-3">
+                            <i class="bi bi-lock me-2"></i>Pay ₹{{ plan[2] }} Securely
+                        </button>
+                        <p class="text-center text-muted small mb-0">
+                            <i class="bi bi-shield-check me-1" style="color: #6fb069;"></i>
+                            <strong>Secure Payment:</strong> This is a mock payment for demonstration
+                        </p>
                     </form>
+
+                    <!-- JavaScript for Payment Method Toggle -->
+                    <script>
+                        const cardRadio = document.getElementById('payment_card');
+                        const upiRadio = document.getElementById('payment_upi');
+                        const cardFields = document.getElementById('card-fields');
+                        const upiSection = document.getElementById('upi-section');
+                        const upiIdInput = document.getElementById('upi_id');
+                        const generatedUpi = document.getElementById('generated_upi');
+
+                        function updatePaymentMethod() {
+                            const upiConfirmedCheckbox = document.getElementById('upi_confirmed');
+                            if (upiRadio.checked) {
+                                cardFields.classList.add('d-none');
+                                upiSection.classList.remove('d-none');
+                                document.getElementById('card_number').removeAttribute('required');
+                                document.getElementById('expiry').removeAttribute('required');
+                                document.getElementById('cvv').removeAttribute('required');
+                                document.getElementById('card_name').removeAttribute('required');
+                                upiConfirmedCheckbox.setAttribute('required', 'required');
+                            } else {
+                                cardFields.classList.remove('d-none');
+                                upiSection.classList.add('d-none');
+                                document.getElementById('card_number').setAttribute('required', 'required');
+                                document.getElementById('expiry').setAttribute('required', 'required');
+                                document.getElementById('cvv').setAttribute('required', 'required');
+                                document.getElementById('card_name').setAttribute('required', 'required');
+                                upiConfirmedCheckbox.removeAttribute('required');
+                            }
+                        }
+
+                        cardRadio.addEventListener('change', updatePaymentMethod);
+                        upiRadio.addEventListener('change', updatePaymentMethod);
+                        updatePaymentMethod();
+
+                        function generateUpiId() {
+                            const base = '{{ session.user_email.split("@")[0] }}'.replace(/[^a-zA-Z0-9._-]/g, '').toLowerCase();
+                            const upi = `${base || 'user'}@pay`;
+                            generatedUpi.textContent = upi;
+                            upiIdInput.value = upi;
+
+                            const qrString = `upi://pay?pa=${encodeURIComponent(upi)}&pn=${encodeURIComponent('{{ session.user_name }}')}`;
+                            const qrUrl = `https://chart.googleapis.com/chart?cht=qr&chs=180x180&chl=${encodeURIComponent(qrString)}&chld=L|1`;
+                            document.getElementById('upi_qr').src = qrUrl;
+                        }
+
+                        generateUpiId();
+                    </script>
                 </div>
             </div>
         </div>
