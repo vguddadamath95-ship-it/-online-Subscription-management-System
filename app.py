@@ -20,7 +20,7 @@ from datetime import datetime, timedelta
 
 # ---------- App Configuration ----------
 app = Flask(__name__)
-app.secret_key = 'submanager_secret_key_2026'  # Secret key for session management
+app.secret_key = os.environ.get('SECRET_KEY', 'submanager_secret_key_2026')  # Secret key for session management
 
 
 # ============================================
@@ -340,37 +340,89 @@ def process_payment(plan_id):
         flash('Plan not found!', 'danger')
         return redirect(url_for('plans'))
 
-    # Calculate subscription dates
-    start_date = datetime.now().strftime('%Y-%m-%d')
-    end_date = (datetime.now() + timedelta(days=plan[3])).strftime('%Y-%m-%d')
+    payment_method = request.form.get('payment_method', 'card')
+    card_number = request.form.get('card_number', '').replace(' ', '')
+    expiry = request.form.get('expiry', '').strip()
+    cvv = request.form.get('cvv', '').strip()
+    card_name = request.form.get('card_name', '').strip()
+    upi_id = request.form.get('upi_id', '').strip()
+    upi_confirmed = request.form.get('upi_confirmed')
 
-    # Cancel any existing active subscriptions
-    conn.execute(
-        "UPDATE subscriptions SET status = 'expired' WHERE user_id = ? AND status = 'active'",
-        (user_id,)
-    )
+    def invalid(message):
+        conn.close()
+        flash(message, 'danger')
+        return redirect(url_for('subscribe', plan_id=plan_id))
 
-    # Create new subscription
-    conn.execute(
-        'INSERT INTO subscriptions (user_id, plan_id, start_date, end_date, status) VALUES (?, ?, ?, ?, ?)',
-        (user_id, plan_id, start_date, end_date, 'active')
-    )
+    try:
+        if payment_method == 'card':
+            if not card_number.isdigit() or len(card_number) != 16:
+                return invalid('Card number must be exactly 16 digits.')
 
-    # Record payment
-    payment_date = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-    conn.execute(
-        'INSERT INTO payments (user_id, amount, payment_date, payment_status) VALUES (?, ?, ?, ?)',
-        (user_id, plan[2], payment_date, 'success')
-    )
+            if not cvv.isdigit() or len(cvv) != 3:
+                return invalid('CVV must be exactly 3 digits.')
 
-    conn.commit()
-    conn.close()
+            try:
+                month, year = expiry.split('/')
+                month = int(month)
+                year = int(year)
+                if year < 100:
+                    year += 2000
+            except ValueError:
+                return invalid('Expiry date must be in MM/YY format.')
 
-    # Show payment success page
-    return render_template('payment_success.html',
-                           plan_name=plan[1],
-                           amount=plan[2],
-                           date=payment_date)
+            if month < 1 or month > 12:
+                return invalid('Expiry month must be between 01 and 12.')
+
+            expiry_date = datetime(year, month, 1)
+            last_day = (expiry_date.replace(day=28) + timedelta(days=4)).replace(day=1) - timedelta(days=1)
+            if last_day < datetime.now():
+                return invalid('Card expiry date is invalid or has passed.')
+
+            if not card_name:
+                return invalid('Cardholder name is required.')
+
+            # Basic validation passed, accept any mock card for demonstration purposes
+            pass
+        else:
+            if not upi_id or '@' not in upi_id:
+                return invalid('Please use a valid UPI ID.')
+            if upi_confirmed != 'yes':
+                return invalid('Please confirm you completed the UPI payment before proceeding.')
+
+        # Calculate subscription dates
+        start_date = datetime.now().strftime('%Y-%m-%d')
+        end_date = (datetime.now() + timedelta(days=plan[3])).strftime('%Y-%m-%d')
+
+        # Cancel any existing active subscriptions
+        conn.execute(
+            "UPDATE subscriptions SET status = 'expired' WHERE user_id = ? AND status = 'active'",
+            (user_id,)
+        )
+
+        # Create new subscription
+        conn.execute(
+            'INSERT INTO subscriptions (user_id, plan_id, start_date, end_date, status) VALUES (?, ?, ?, ?, ?)',
+            (user_id, plan_id, start_date, end_date, 'active')
+        )
+
+        # Record payment
+        payment_date = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        conn.execute(
+            'INSERT INTO payments (user_id, amount, payment_date, payment_status) VALUES (?, ?, ?, ?)',
+            (user_id, plan[2], payment_date, 'success')
+        )
+
+        conn.commit()
+        conn.close()
+
+        # Show payment success page
+        return render_template('payment_success.html',
+                               plan_name=plan[1],
+                               amount=plan[2],
+                               date=payment_date)
+    except Exception as e:
+        import traceback
+        return traceback.format_exc(), 500
 
 
 # ============================================
@@ -546,4 +598,4 @@ if __name__ == '__main__':
     print('=' * 50)
     # Run the Flask development server
     port = int(os.environ.get('PORT', 5000))
-    app.run(host='0.0.0.0', port=port, debug=False)
+    app.run(host='0.0.0.0', port=port, debug=True)
