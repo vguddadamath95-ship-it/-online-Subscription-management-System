@@ -22,6 +22,16 @@ from datetime import datetime, timedelta
 app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', 'submanager_secret_key_2026')  # Secret key for session management
 
+# Ensure the database is created before the first request.
+_db_initialized = False
+
+@app.before_request
+def initialize_database():
+    global _db_initialized
+    if not _db_initialized:
+        init_db()
+        _db_initialized = True
+
 
 # ============================================
 # DATABASE SETUP
