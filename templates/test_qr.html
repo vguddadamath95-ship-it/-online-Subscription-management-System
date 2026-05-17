@@ -1,0 +1,124 @@
+{% extends 'base.html' %}
+
+{% block title %}QR Code Test{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow-lg">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">🔳 QR Code Generator Test</h4>
+                </div>
+                <div class="card-body p-4">
+                    
+                    <div class="alert alert-info" role="alert">
+                        <strong>Testing QR Code Generation</strong><br>
+                        Below are two working QR codes for testing:
+                    </div>
+
+                    <!-- Dummy QR Code -->
+                    <div class="mb-5 p-4 border rounded bg-light">
+                        <h5 class="mb-3">1. Dummy Payment QR Code</h5>
+                        <p class="text-muted">This QR code contains encoded payment information.</p>
+                        <div class="text-center">
+                            <img src="{{ url_for('generate_qr') }}" alt="Dummy QR Code" class="img-fluid border" style="max-width: 300px;">
+                        </div>
+                        <p class="mt-3 small text-muted">
+                            <strong>Encoded Data:</strong><br>
+                            Payment ID: PAY-2026-001<br>
+                            User: Test User<br>
+                            Amount: 299<br>
+                            Status: success<br>
+                            Date: [Current timestamp]
+                        </p>
+                    </div>
+
+                    <!-- Test Info -->
+                    <div class="alert alert-success" role="alert">
+                        <h5 class="alert-heading">✅ How to Test:</h5>
+                        <ul class="mb-0">
+                            <li>Scan either QR code with your phone camera or QR code scanner app</li>
+                            <li>The QR code will decode to show the encoded information</li>
+                            <li>Try using an online QR code decoder at: <a href="https://www.qr-code-generator.com/" target="_blank">https://www.qr-code-generator.com/</a></li>
+                            <li>Upload the QR code image to decode its contents</li>
+                        </ul>
+                    </div>
+
+                    <!-- API Endpoints Info -->
+                    <div class="card mt-4">
+                        <div class="card-header bg-secondary">
+                            <h6 class="mb-0">📡 Available QR Code Endpoints</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <strong>1. Dummy QR Code (Public):</strong>
+                                <code>/generate_qr</code>
+                                <p class="small text-muted mt-1">Returns a PNG image with dummy payment data</p>
+                            </div>
+                            <div class="mb-3">
+                                <strong>2. Subscription QR Code (Login Required):</strong>
+                                <code>/generate_subscription_qr/&lt;subscription_id&gt;</code>
+                                <p class="small text-muted mt-1">Returns a PNG image with subscription details (requires user login)</p>
+                            </div>
+                            <div>
+                                <strong>3. Test Page:</strong>
+                                <code>/test_qr</code>
+                                <p class="small text-muted mt-1">This page - for testing QR code generation</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Code Example -->
+                    <div class="card mt-4">
+                        <div class="card-header bg-dark">
+                            <h6 class="mb-0 text-white">💻 Usage Examples</h6>
+                        </div>
+                        <div class="card-body">
+                            <p><strong>HTML - Embed QR Code:</strong></p>
+                            <pre><code>&lt;img src="/generate_qr" alt="QR Code"&gt;</code></pre>
+
+                            <p class="mt-3"><strong>HTML - Subscription QR Code (replace 1 with actual subscription ID):</strong></p>
+                            <pre><code>&lt;img src="/generate_subscription_qr/1" alt="Subscription QR"&gt;</code></pre>
+
+                            <p class="mt-3"><strong>Python - In Flask Template:</strong></p>
+                            <pre><code>&lt;img src="{{ "{{ url_for('generate_qr') }}" }}" alt="QR Code"&gt;
+&lt;img src="{{ "{{ url_for('generate_subscription_qr', subscription_id=sub_id) }}" }}" alt="Sub QR"&gt;</code></pre>
+                        </div>
+                    </div>
+
+                    <div class="mt-4">
+                        <a href="{{ url_for('home') }}" class="btn btn-secondary">← Back to Home</a>
+                        {% if session.get('user_id') %}
+                            <a href="{{ url_for('dashboard') }}" class="btn btn-primary">Go to Dashboard</a>
+                        {% else %}
+                            <a href="{{ url_for('login') }}" class="btn btn-primary">Login</a>
+                        {% endif %}
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    code {
+        background-color: #f8f9fa;
+        padding: 2px 6px;
+        border-radius: 3px;
+        font-size: 0.9em;
+    }
+    pre code {
+        display: block;
+        padding: 12px;
+        margin: 0;
+        font-size: 0.85em;
+    }
+    pre {
+        background-color: #f8f9fa;
+        border: 1px solid #dee2e6;
+        border-radius: 4px;
+    }
+</style>
+{% endblock %}

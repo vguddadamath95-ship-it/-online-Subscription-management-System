@@ -32,6 +32,21 @@
                         </div>
                     </div>
 
+                    <!-- Quick UPI Payment Button -->
+                    <div class="mb-4">
+                        <a href="{{ url_for('payment_upi', plan_id=plan[0]) }}" class="btn btn-success btn-lg w-100 mb-2" style="background: linear-gradient(135deg, #34c759 0%, #00c853 100%); border: none;">
+                            <i class="bi bi-phone me-2"></i><strong>Pay with UPI QR Code</strong>
+                            <br><small style="font-weight: 400;">Fastest & Easiest Way</small>
+                        </a>
+                    </div>
+
+                    <!-- Divider -->
+                    <div class="text-center mb-4">
+                        <p class="text-muted" style="margin: 0; position: relative; z-index: 1;">
+                            <span style="background: white; padding: 0 10px;">or use other payment methods</span>
+                        </p>
+                    </div>
+
                     <!-- Payment Form -->
                     <form method="POST" action="{{ url_for('process_payment', plan_id=plan[0]) }}">
                         <!-- Payment Method Selection -->
