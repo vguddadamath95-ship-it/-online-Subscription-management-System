@@ -12,15 +12,23 @@ Tech Stack: Python Flask + SQLite + Bootstrap 5
 """
 
 # ---------- Import Required Libraries ----------
-from flask import Flask, render_template, request, redirect, url_for, session, flash
+from flask import Flask, render_template, request, redirect, url_for, session, flash, send_file
 from werkzeug.security import generate_password_hash, check_password_hash
 import sqlite3
 import os
 from datetime import datetime, timedelta
+import qrcode
+from io import BytesIO
 
 # ---------- App Configuration ----------
 app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', 'submanager_secret_key_2026')  # Secret key for session management
+
+# ---------- UPI Configuration ----------
+# Replace with your actual UPI ID for production
+UPI_ID = 'testuser@pay'  # Format: username@bankname or phone@upi
+MERCHANT_NAME = 'Subscription Manager'
+MERCHANT_CATEGORY_CODE = '5411'  # For subscription services
 
 # Ensure the database is created before the first request.
 _db_initialized = False
@@ -65,6 +73,9 @@ def init_db():
             is_admin INTEGER DEFAULT 0
         )
     ''')
+
+    # Migration: Ensure all existing users have is_admin set to 0 instead of NULL
+    cursor.execute('UPDATE users SET is_admin = 0 WHERE is_admin IS NULL')
 
     # Create Plans table
     cursor.execute('''
@@ -477,7 +488,7 @@ def admin_dashboard():
     # Get all data for admin
     all_plans = conn.execute('SELECT * FROM plans').fetchall()
     all_users = conn.execute(
-        'SELECT id, name, email FROM users WHERE is_admin = 0'
+        'SELECT id, name, email FROM users WHERE is_admin = 0 OR is_admin IS NULL'
     ).fetchall()
 
     # Get subscriptions with user and plan names
@@ -592,6 +603,198 @@ def delete_plan(plan_id):
 def about():
     """Display the about/contact page."""
     return render_template('about.html')
+
+
+# ============================================
+# ROUTES - QR CODE GENERATION
+# ============================================
+
+@app.route('/generate_qr')
+def generate_qr():
+    """
+    Generate a dummy QR code for testing.
+    Returns a QR code image that encodes dummy payment information.
+    """
+    # Create QR code data (dummy subscription payment info)
+    qr_data = {
+        'payment_id': 'PAY-2026-001',
+        'user': 'Test User',
+        'amount': 299,
+        'status': 'success',
+        'date': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    }
+    
+    # Format data as string
+    qr_text = f"Payment ID: {qr_data['payment_id']}\nUser: {qr_data['user']}\nAmount: {qr_data['amount']}\nStatus: {qr_data['status']}\nDate: {qr_data['date']}"
+    
+    # Generate QR code
+    qr = qrcode.QRCode(
+        version=1,
+        error_correction=qrcode.constants.ERROR_CORRECT_L,
+        box_size=10,
+        border=4,
+    )
+    qr.add_data(qr_text)
+    qr.make(fit=True)
+    
+    # Create image
+    qr_image = qr.make_image(fill_color="black", back_color="white")
+    
+    # Save to bytes buffer
+    img_io = BytesIO()
+    qr_image.save(img_io, 'PNG')
+    img_io.seek(0)
+    
+    return send_file(img_io, mimetype='image/png', as_attachment=False)
+
+
+@app.route('/generate_subscription_qr/<int:subscription_id>')
+def generate_subscription_qr(subscription_id):
+    """
+    Generate QR code for a specific subscription.
+    Encodes subscription details.
+    """
+    if 'user_id' not in session:
+        flash('Please login to access this feature.', 'warning')
+        return redirect(url_for('login'))
+    
+    conn = get_db()
+    subscription = conn.execute('''
+        SELECT s.id, s.start_date, s.end_date, s.status, p.plan_name, p.price
+        FROM subscriptions s
+        JOIN plans p ON s.plan_id = p.id
+        WHERE s.id = ? AND s.user_id = ?
+    ''', (subscription_id, session['user_id'])).fetchone()
+    
+    conn.close()
+    
+    if not subscription:
+        flash('Subscription not found!', 'danger')
+        return redirect(url_for('dashboard'))
+    
+    # Create QR code data
+    qr_text = f"Subscription ID: {subscription[0]}\nPlan: {subscription[4]}\nPrice: {subscription[5]}\nStatus: {subscription[3]}\nStart: {subscription[1]}\nEnd: {subscription[2]}"
+    
+    # Generate QR code
+    qr = qrcode.QRCode(
+        version=1,
+        error_correction=qrcode.constants.ERROR_CORRECT_L,
+        box_size=10,
+        border=4,
+    )
+    qr.add_data(qr_text)
+    qr.make(fit=True)
+    
+    # Create image
+    qr_image = qr.make_image(fill_color="black", back_color="white")
+    
+    # Save to bytes buffer
+    img_io = BytesIO()
+    qr_image.save(img_io, 'PNG')
+    img_io.seek(0)
+    
+    return send_file(img_io, mimetype='image/png', as_attachment=False)
+
+
+@app.route('/test_qr')
+def test_qr():
+    """Test page displaying the dummy QR code."""
+    return render_template('test_qr.html')
+
+
+# ============================================
+# ROUTES - UPI PAYMENT QR CODE
+# ============================================
+
+def generate_upi_string(upi_id, name, amount, description):
+    """
+    Generate UPI payment string in proper format.
+    Format: upi://pay?pa=UPI_ID&pn=NAME&am=AMOUNT&tn=DESCRIPTION&tr=REF_ID
+    """
+    from urllib.parse import quote
+    
+    # Ensure amount is properly formatted
+    amount_str = f"{float(amount):.2f}"
+    
+    # Build UPI string
+    upi_string = f"upi://pay?pa={upi_id}&pn={quote(name)}&am={amount_str}&tn={quote(description)}"
+    
+    return upi_string
+
+
+@app.route('/generate_upi_qr/<int:plan_id>')
+def generate_upi_qr(plan_id):
+    """
+    Generate UPI payment QR code for a specific plan.
+    QR code contains UPI payment details.
+    """
+    conn = get_db()
+    plan = conn.execute('SELECT * FROM plans WHERE id = ?', (plan_id,)).fetchone()
+    conn.close()
+    
+    if not plan:
+        return "Plan not found", 404
+    
+    # Generate UPI string
+    upi_string = generate_upi_string(
+        upi_id=UPI_ID,
+        name=MERCHANT_NAME,
+        amount=plan[2],  # plan price
+        description=f"Subscription: {plan[1]}"
+    )
+    
+    # Generate QR code
+    qr = qrcode.QRCode(
+        version=1,
+        error_correction=qrcode.constants.ERROR_CORRECT_H,  # High error correction for payment QR
+        box_size=10,
+        border=2,
+    )
+    qr.add_data(upi_string)
+    qr.make(fit=True)
+    
+    # Create image with colors
+    qr_image = qr.make_image(fill_color="black", back_color="white")
+    
+    # Save to bytes buffer
+    img_io = BytesIO()
+    qr_image.save(img_io, 'PNG')
+    img_io.seek(0)
+    
+    return send_file(img_io, mimetype='image/png', as_attachment=False)
+
+
+@app.route('/payment_upi/<int:plan_id>')
+def payment_upi(plan_id):
+    """
+    Display UPI payment page with QR code.
+    """
+    if 'user_id' not in session:
+        flash('Please login to subscribe.', 'warning')
+        return redirect(url_for('login'))
+
+    conn = get_db()
+    plan = conn.execute('SELECT * FROM plans WHERE id = ?', (plan_id,)).fetchone()
+    conn.close()
+
+    if not plan:
+        flash('Plan not found!', 'danger')
+        return redirect(url_for('plans'))
+
+    # Generate UPI string for display
+    upi_string = generate_upi_string(
+        upi_id=UPI_ID,
+        name=MERCHANT_NAME,
+        amount=plan[2],
+        description=f"Subscription: {plan[1]}"
+    )
+
+    return render_template('payment_upi.html', 
+                         plan=plan,
+                         upi_id=UPI_ID,
+                         merchant_name=MERCHANT_NAME,
+                         upi_string=upi_string,
+                         plan_id=plan_id)
 
 
 # ============================================
