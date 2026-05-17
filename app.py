@@ -487,26 +487,30 @@ def admin_dashboard():
 
     # Get all data for admin
     all_plans = conn.execute('SELECT * FROM plans').fetchall()
-    all_users = conn.execute(
-        'SELECT id, name, email FROM users WHERE is_admin = 0 OR is_admin IS NULL'
-    ).fetchall()
+    all_users = conn.execute('''
+        SELECT u.id, u.name, u.email, p.plan_name, s.status
+        FROM users u
+        LEFT JOIN subscriptions s ON u.id = s.user_id AND s.status = 'active'
+        LEFT JOIN plans p ON s.plan_id = p.id
+        WHERE u.is_admin = 0 OR u.is_admin IS NULL
+    ''').fetchall()
 
     # Get subscriptions with user and plan names
     all_subs = conn.execute('''
         SELECT s.id, s.user_id, s.plan_id, s.status, s.start_date, s.end_date,
-               u.name, p.plan_name
+               COALESCE(u.name, 'Deleted User'), COALESCE(p.plan_name, 'Unknown Plan')
         FROM subscriptions s
-        JOIN users u ON s.user_id = u.id
-        JOIN plans p ON s.plan_id = p.id
+        LEFT JOIN users u ON s.user_id = u.id
+        LEFT JOIN plans p ON s.plan_id = p.id
         ORDER BY s.id DESC
     ''').fetchall()
 
     # Get payments with user names
     all_payments = conn.execute('''
         SELECT p.id, p.user_id, p.amount, p.payment_date, p.payment_status,
-               u.name
+               COALESCE(u.name, 'Deleted User')
         FROM payments p
-        JOIN users u ON p.user_id = u.id
+        LEFT JOIN users u ON p.user_id = u.id
         ORDER BY p.id DESC
     ''').fetchall()
 

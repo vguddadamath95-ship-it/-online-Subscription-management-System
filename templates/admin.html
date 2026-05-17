@@ -161,6 +161,7 @@
                                     <th>ID</th>
                                     <th>Name</th>
                                     <th>Email</th>
+                                    <th>Active Subscription</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -169,6 +170,13 @@
                                     <td>{{ user[0] }}</td>
                                     <td class="fw-bold">{{ user[1] }}</td>
                                     <td>{{ user[2] }}</td>
+                                    <td>
+                                        {% if user[3] %}
+                                            <span class="badge-active">{{ user[3] }}</span>
+                                        {% else %}
+                                            <span class="text-muted">No Active Subscription</span>
+                                        {% endif %}
+                                    </td>
                                 </tr>
                                 {% endfor %}
                             </tbody>
