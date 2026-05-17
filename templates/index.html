@@ -17,15 +17,15 @@
             <strong>Never miss a renewal. Always stay in control.</strong>
         </p>
         <div class="d-flex gap-3 justify-content-center flex-wrap">
-            <a href="{{ url_for('plans') }}" class="btn btn-primary btn-lg px-4" title="Browse available plans">
+            <a href="{{ url_for('plans') }}" class="btn btn-light btn-lg px-4" title="Browse available plans">
                 <i class="bi bi-collection me-2"></i>View Plans
             </a>
             {% if not session.get('user_id') %}
-            <a href="{{ url_for('register') }}" class="btn btn-outline-primary btn-lg px-4" title="Create your account">
+            <a href="{{ url_for('register') }}" class="btn btn-outline-light btn-lg px-4" title="Create your account">
                 <i class="bi bi-person-plus me-2"></i>Get Started Free
             </a>
             {% else %}
-            <a href="{{ url_for('dashboard') }}" class="btn btn-outline-primary btn-lg px-4" title="Go to your dashboard">
+            <a href="{{ url_for('dashboard') }}" class="btn btn-outline-light btn-lg px-4" title="Go to your dashboard">
                 <i class="bi bi-speedometer2 me-2"></i>Go to Dashboard
             </a>
             {% endif %}
@@ -174,7 +174,7 @@
 <section class="py-5" style="background: linear-gradient(135deg, #2e6b4d, #1e4a35);">
     <div class="container text-center text-white">
         <h2 class="fw-bold mb-3" style="color: white; font-size: 2rem;">Ready to Simplify Your Subscriptions?</h2>
-        <p class="mb-4" style="opacity: 0.95; font-size: 1.05rem;">Join thousands of users who trust SubManager to organize their digital subscriptions.</p>
+        <p class="mb-4" style="color: rgba(255, 255, 255, 0.9) !important; font-size: 1.05rem;">Join thousands of users who trust SubManager to organize their digital subscriptions.</p>
         {% if not session.get('user_id') %}
         <a href="{{ url_for('register') }}" class="btn btn-light btn-lg px-5">
             <i class="bi bi-rocket me-2"></i>Sign Up Now - It's Free
