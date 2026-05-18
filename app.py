@@ -299,7 +299,7 @@ def dashboard():
                s.status, p.plan_name, p.price, p.duration
         FROM subscriptions s
         JOIN plans p ON s.plan_id = p.id
-        WHERE s.user_id = ?
+        WHERE s.user_id = ? AND s.status = 'active'
         ORDER BY s.id DESC LIMIT 1
     ''', (user_id,)).fetchone()
 
