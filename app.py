@@ -42,17 +42,100 @@ def initialize_database():
 
 
 # ============================================
-# DATABASE SETUP
+# DATABASE SETUP (Auto-Dual Adapter for SQLite and PostgreSQL)
 # ============================================
+
+try:
+    import psycopg2
+    import psycopg2.extras
+    HAS_POSTGRES = True
+except ImportError:
+    HAS_POSTGRES = False
+
+DATABASE_URL = os.environ.get('DATABASE_URL')
+
+class SQLiteConnectionWrapper:
+    def __init__(self, conn):
+        self.conn = conn
+
+    def cursor(self):
+        return self.conn.cursor()
+
+    def execute(self, sql, params=None):
+        if params is None:
+            return self.conn.execute(sql)
+        return self.conn.execute(sql, params)
+
+    def executemany(self, sql, params):
+        return self.conn.executemany(sql, params)
+
+    def commit(self):
+        self.conn.commit()
+
+    def close(self):
+        self.conn.close()
+
+class PostgresCursorWrapper:
+    def __init__(self, cur):
+        self.cur = cur
+
+    def execute(self, sql, params=None):
+        sql_pg = sql.replace('?', '%s').replace('INTEGER PRIMARY KEY AUTOINCREMENT', 'SERIAL PRIMARY KEY')
+        if params is None:
+            self.cur.execute(sql_pg)
+        else:
+            self.cur.execute(sql_pg, params)
+        return self
+
+    def fetchall(self):
+        return self.cur.fetchall()
+
+    def fetchone(self):
+        return self.cur.fetchone()
+
+    def close(self):
+        self.cur.close()
+
+class PostgresConnectionWrapper:
+    def __init__(self, conn):
+        self.conn = conn
+
+    def cursor(self):
+        return PostgresCursorWrapper(self.conn.cursor())
+
+    def execute(self, sql, params=None):
+        sql_pg = sql.replace('?', '%s').replace('INTEGER PRIMARY KEY AUTOINCREMENT', 'SERIAL PRIMARY KEY')
+        cur = self.conn.cursor()
+        if params is None:
+            cur.execute(sql_pg)
+        else:
+            cur.execute(sql_pg, params)
+        return PostgresCursorWrapper(cur)
+
+    def executemany(self, sql, params):
+        sql_pg = sql.replace('?', '%s').replace('INTEGER PRIMARY KEY AUTOINCREMENT', 'SERIAL PRIMARY KEY')
+        cur = self.conn.cursor()
+        cur.executemany(sql_pg, params)
+        return PostgresCursorWrapper(cur)
+
+    def commit(self):
+        self.conn.commit()
+
+    def close(self):
+        self.conn.close()
 
 def get_db():
     """
-    Connect to the SQLite database.
-    Returns a database connection object.
+    Connect to PostgreSQL if DATABASE_URL is set, otherwise fall back to SQLite.
+    Returns a database connection-like wrapper that translates SQL syntax seamlessly.
     """
-    db_path = os.path.join(os.path.dirname(__file__), 'database.db')
-    conn = sqlite3.connect(db_path)
-    return conn
+    if DATABASE_URL and HAS_POSTGRES:
+        conn = psycopg2.connect(DATABASE_URL)
+        return PostgresConnectionWrapper(conn)
+    else:
+        db_path = os.path.join(os.path.dirname(__file__), 'database.db')
+        conn = sqlite3.connect(db_path)
+        return SQLiteConnectionWrapper(conn)
 
 
 def init_db():
